@@ -7,7 +7,7 @@
         "react/http": "^1.9"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.95",
+        "friendsofphp/php-cs-fixer": "^3.52",
         "phpunit/phpunit": "^10.5"
     },
     "autoload": {
