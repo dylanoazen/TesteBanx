@@ -7,6 +7,7 @@
         "react/http": "^1.9"
     },
     "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95",
         "phpunit/phpunit": "^10.5"
     },
     "autoload": {
@@ -21,7 +22,10 @@
     },
     "scripts": {
         "start": "php public/server.php",
-        "test": "phpunit"
+        "test": "phpunit",
+        "lint": "php-cs-fixer fix --dry-run --diff",
+        "lint:fix": "php-cs-fixer fix"
+
     },
     "config": {
         "sort-packages": true
