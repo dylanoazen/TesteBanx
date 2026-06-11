@@ -91,7 +91,7 @@ final class EventController
         try {
             $account = $this->service->withdraw($data['origin'], (int)$data['amount']);
             return $this->json(201, ['origin' => $account->toArray()]);
-        } catch (AccountNotFoundException ) {
+        } catch (AccountNotFoundException) {
             return $this->plain(404, '0');
         } catch (InsufficientFundsException) {
             return $this->plain(422, '0');
