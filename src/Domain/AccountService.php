@@ -45,6 +45,19 @@ final class AccountService
         return $account;
     }
 
+    public function transfer(string $originAccId, string $destAccId, int $amount): array
+    {
+        $originAccount = $this->findOrFail($originAccId);
+        $destAccount = $this->repository->find($destAccId) ?? new Account($destAccId);
+        $originAccount->withdraw($amount);
+        $destAccount->deposit($amount);
+
+        $this->repository->save($originAccount);
+        $this->repository->save($destAccount);
+
+        return ['origin' => $originAccount, 'destination' => $destAccount];
+    }
+
     public function reset(): void
     {
         $this->repository->reset();

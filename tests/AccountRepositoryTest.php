@@ -24,7 +24,7 @@ class AccountRepositoryTest extends TestCase
         $service->balance('1234');
     }
 
-    public function testGetBalanceWithAccount()
+    public function testGetBalanceWithAccount(): void
     {
         $account = new Account('1', 50);
         $repository = new AccountRepository();
@@ -37,7 +37,7 @@ class AccountRepositoryTest extends TestCase
 
     // withdraw
 
-    public function testWithdrawWithNoAccount()
+    public function testWithdrawWithNoAccount(): void
     {
         $repository = new AccountRepository();
         $service = new AccountService($repository);
@@ -45,7 +45,7 @@ class AccountRepositoryTest extends TestCase
         $service->withdraw('1234', 40);
     }
 
-    public function testWithdrawWithAccount()
+    public function testWithdrawWithAccount(): void
     {
         $account = new Account('2', 50);
         $repository = new AccountRepository();
@@ -63,7 +63,7 @@ class AccountRepositoryTest extends TestCase
 
     // deposit
 
-    public function testGetBalanceCreatingAccount()
+    public function testGetBalanceCreatingAccount(): void
     {
         $repository = new AccountRepository();
         $service = new AccountService($repository);
@@ -76,7 +76,7 @@ class AccountRepositoryTest extends TestCase
 
     }
 
-    public function testTwoDepositsInARoll()
+    public function testTwoDepositsInARoll(): void
     {
         $repository = new AccountRepository();
         $service = new AccountService($repository);
@@ -86,4 +86,57 @@ class AccountRepositoryTest extends TestCase
         $this->assertSame(20, $service->balance('3'));
     }
 
+    // transfer
+
+    public function testTransWithNoDestin(): void
+    {
+        $originAcc = new Account('1', 50);
+        $repository = new AccountRepository();
+        $service = new AccountService($repository);
+        $repository->save($originAcc);
+        $service->transfer($originAcc->id(), '2', 10);
+
+        $this->assertEquals(10, $service->balance('2'));
+        $this->assertEquals(40, $service->balance('1'));
+    }
+
+    public function testTransWithNoOrigin(): void
+    {
+        $repository = new AccountRepository();
+        $service = new AccountService($repository);
+        $this->expectException(AccountNotFoundException::class);
+        $service->transfer('1', '2', 10);
+    }
+
+    public function testTransWithOriginAndDest(): void
+    {
+        $originAcc = new Account('1', 50);
+        $destAcc = new Account('2', 0);
+        $repository = new AccountRepository();
+        $service = new AccountService($repository);
+        $repository->save($originAcc);
+        $repository->save($destAcc);
+        $service->transfer($originAcc->id(), $destAcc->id(), 10);
+
+        $this->assertSame(40, $service->balance('1'));
+        $this->assertSame(10, $service->balance('2'));
+    }
+
+    public function testTransferWithInsufficientFoundsLeavesBothUntoched(): void
+    {
+        $originAcc = new Account('1', 5);
+        $destAcc = new Account('2', 50);
+        $repository = new AccountRepository();
+        $service = new AccountService($repository);
+        $repository->save($originAcc);
+        $repository->save($destAcc);
+
+        try {
+            $service->transfer($originAcc->id(), $destAcc->id(), 15);
+            self::fail('Expected InsufficientFundsException.');
+        } catch (\App\Domain\Exception\InsufficientFundsException) {
+            $this->assertSame(5, $service->balance($originAcc->id()));
+            $this->assertSame(50, $service->balance($destAcc->id()));
+        }
+    }
 }
