@@ -14,3 +14,4 @@ jobs:
       - run: composer install
       - run: composer test
       - run: composer lint
+      - run: composer audit
