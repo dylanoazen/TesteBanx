@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http;
 
-use App\Domain\AccountService;
+use App\Application\AccountService;
 use App\Domain\Exception\AccountNotFoundException;
 use App\Domain\Exception\InsufficientFundsException;
 use Psr\Http\Message\ResponseInterface;
@@ -34,12 +34,17 @@ final class EventController
 
     private function event(ServerRequestInterface $request): ResponseInterface
     {
-        $data = json_decode((string)$request->getBody(), true);
-        if ($data === null) {
+        try {
+            $data = json_decode((string) $request->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
             return $this->plain(400, '0');
         }
 
-        return match ($data['type'] ?? null) {
+        if (!is_array($data) || !isset($data['type'])) {
+            return $this->plain(400, '0');
+        }
+
+        return match ($data['type']) {
             'withdraw' => $this->withdraw($data),
             'deposit'  => $this->deposit($data),
             'transfer' => $this->transfer($data),
@@ -84,7 +89,7 @@ final class EventController
 
     private function withdraw(array $data): ResponseInterface
     {
-        if (!isset($data['origin']) || $data['amount'] === null) {
+        if (!isset($data['origin']) || !isset($data['amount'])) {
             return $this->plain(400, '0');
         }
 
@@ -94,13 +99,13 @@ final class EventController
         } catch (AccountNotFoundException) {
             return $this->plain(404, '0');
         } catch (InsufficientFundsException) {
-            return $this->plain(422, '0');
+            return $this->plain(404, '0');
         }
     }
 
     private function deposit(array $data): ResponseInterface
     {
-        if (!isset($data['destination']) || $data['amount'] === null) {
+        if (!isset($data['destination']) || !isset($data['amount'])) {
             return $this->plain(400, '0');
         }
         $account = $this->service->deposit($data['destination'], (int)$data['amount']);
@@ -109,7 +114,7 @@ final class EventController
 
     private function transfer(array $data): ResponseInterface
     {
-        if (!isset($data['origin']) || !isset($data['destination']) || $data['amount'] === null) {
+        if (!isset($data['origin']) || !isset($data['destination']) || !isset($data['amount'])) {
             return $this->plain(400, '0');
         }
 
@@ -122,7 +127,7 @@ final class EventController
         } catch (AccountNotFoundException) {
             return $this->plain(404, '0');
         } catch (InsufficientFundsException) {
-            return $this->plain(422, '0');
+            return $this->plain(404, '0');
         }
     }
 }

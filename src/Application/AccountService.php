@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Domain;
+namespace App\Application;
 
+use App\Domain\Account;
+use App\Domain\AccountRepository;
 use App\Domain\Exception\AccountNotFoundException;
+
 
 final class AccountService
 {
